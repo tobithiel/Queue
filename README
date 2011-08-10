@@ -12,9 +12,12 @@ sorted queue:
 compilation OS X:
   dylib:   gcc -dynamiclib -Wall -Wextra -Wno-unused-parameter -lpthread -o libqueue.dylib queue.c
   example: gcc -Wall -Wextra -Wno-unused-parameter -lpthread -o example queue.c example.c
+compilation Linux:
+  example: gcc -Wall -Wextra -Wno-unused-parameter -lpthread -o example queue.c example.c
 
 TODO:
 - proper test suite, so that everybody can easily see whats tested and run the tests himself
+- Windows support
 - dynamically create type-safe put/get methods with macros
 - ability to turn of element counting => only unlimited queue
 - peek at next element

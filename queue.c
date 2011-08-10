@@ -1,23 +1,23 @@
 /**
-	* Copyright (C) 2011 by Tobias Thiel
-	* Permission is hereby granted, free of charge, to any person obtaining a copy
-	* of this software and associated documentation files (the "Software"), to deal
-	* in the Software without restriction, including without limitation the rights
-	* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-	* copies of the Software, and to permit persons to whom the Software is
-	* furnished to do so, subject to the following conditions:
-	* 
-	* The above copyright notice and this permission notice shall be included in
-	* all copies or substantial portions of the Software.
-	* 
-	* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-	* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-	* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-	* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-	* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-	* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-	* THE SOFTWARE.
-	*/
+  * Copyright (C) 2011 by Tobias Thiel
+  * Permission is hereby granted, free of charge, to any person obtaining a copy
+  * of this software and associated documentation files (the "Software"), to deal
+  * in the Software without restriction, including without limitation the rights
+  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  * copies of the Software, and to permit persons to whom the Software is
+  * furnished to do so, subject to the following conditions:
+  * 
+  * The above copyright notice and this permission notice shall be included in
+  * all copies or substantial portions of the Software.
+  * 
+  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+  * THE SOFTWARE.
+  */
 
 #include "queue.h"
 #include "queue_internal.h"
@@ -103,10 +103,10 @@ queue_t *queue_create_limited_sorted(uintX_t max_elements, int8_t asc, int (*cmp
 }
 
 /**
-	* internal queue destroy function
-	* fd specifies if the saved data should be freed
-	* ff is the user-defined free function
-	*/
+  * internal queue destroy function
+  * fd specifies if the saved data should be freed
+  * ff is the user-defined free function
+  */
 void queue_destroy_internal(queue_t *q, uint8_t fd, void (*ff)(void *)) {
 	// make sure no new data comes and wake all waiting threads
 	queue_set_new_data(q, 0);
@@ -238,10 +238,10 @@ uint8_t queue_get_new_data(queue_t *q) {
 }
 
 /**
-	* internal put function
-	* action specifies what should be done if max_elements is reached.
-	* when action is NULL the function returns with an error code
-	*/
+  * internal put function
+  * action specifies what should be done if max_elements is reached.
+  * when action is NULL the function returns with an error code
+  */
 int8_t queue_put_internal(queue_t *q , void *el, int (*action)(pthread_cond_t *, pthread_mutex_t *)) {
 	if(q == NULL) // queue not valid
 		return Q_ERR_INVALID;
@@ -331,10 +331,10 @@ int8_t queue_put_wait(queue_t *q, void *el) {
 }
 
 /**
-	* internal get function
-	* action specifies what should be done if there are no elements in the queue
-	* when action is NULL the function returns with an error code
-	*/
+  * internal get function
+  * action specifies what should be done if there are no elements in the queue
+  * when action is NULL the function returns with an error code
+  */
 int8_t queue_get_internal(queue_t *q, void **e, int (*action)(pthread_cond_t *, pthread_mutex_t *), int (*cmp)(void *, void *), void *cmpel) {
 	if(q == NULL) { // queue not valid
 		*e = NULL;
