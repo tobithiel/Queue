@@ -27,12 +27,6 @@
 
 #include "queue.h"
 
-typedef struct queue_callback_s {
-	uint16_t to_rem;
-	void (*cb)(void *ud);
-	void *ud;
-} queue_callback_t;
-
 /**
   * adds an element to the queue
   * when action is NULL the function returns with an error code
@@ -66,7 +60,7 @@ int8_t queue_get_internal(queue_t *q, void **e, int (*action)(pthread_cond_t *, 
   * fd - should element data be freed? 0 => No, Otherwise => Yes
   * ff - function to release the memory, NULL => free()
   */
-void queue_destroy_internal(queue_t *q, uint8_t fd, void (*ff)(void *));
+int8_t queue_destroy_internal(queue_t *q, uint8_t fd, void (*ff)(void *));
 
 /**
   * flushes a queue
@@ -76,6 +70,6 @@ void queue_destroy_internal(queue_t *q, uint8_t fd, void (*ff)(void *));
   * fd - should element data be freed? 0 => No, Otherwise => Yes
   * ff - function to release the memory, NULL => free()
   */
-void queue_flush_internal(queue_t *q, uint8_t fd, void (*ff)(void *));
+int8_t queue_flush_internal(queue_t *q, uint8_t fd, void (*ff)(void *));
 
 #endif /* __QUEUE_INTERNAL_H__ */

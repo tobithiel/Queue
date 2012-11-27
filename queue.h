@@ -34,8 +34,10 @@
   * type which is used for counting the number of elements.
   * needed for limited queues
   */
-typedef uint16_t uintX_t;
-#define UINTX_MAX UINT16_MAX
+#ifndef UINTX_MAX
+  typedef uint16_t uintX_t;
+  #define UINTX_MAX UINT16_MAX
+#endif
 
 /**
   * returned error codes, everything except Q_OK should be < 0
@@ -114,7 +116,7 @@ queue_t *queue_create_limited_sorted(uintX_t max_elements, int8_t asc, int (*cmp
   *
   * q - the queue to be destroyed
   */
-void queue_destroy(queue_t *q);
+int8_t queue_destroy(queue_t *q);
 
 /**
   * in addition to queue_destroy(), this function will also free the memory of your elements
@@ -122,14 +124,14 @@ void queue_destroy(queue_t *q);
   * q - the queue to be destroyed
   * ff - the free function to be used for the elements (free() if NULL)
   */
-void queue_destroy_complete(queue_t *q, void (*ff)(void *));
+int8_t queue_destroy_complete(queue_t *q, void (*ff)(void *));
 
 /**
   * deletes all the elements from the queue, but does not release their memory
   *
   * q - the queue
   */
-void queue_flush(queue_t *q);
+int8_t queue_flush(queue_t *q);
 
 /**
   * just like queue_flush, but releases the memory of the elements
@@ -137,7 +139,7 @@ void queue_flush(queue_t *q);
   * q - the queue
   * ff - the free function to be used for the elements (free() if NULL)
   */
-void queue_flush_complete(queue_t *q, void (*ff)(void *));
+int8_t queue_flush_complete(queue_t *q, void (*ff)(void *));
 
 /**
   * returns the number of elements in the queue
@@ -224,10 +226,11 @@ int8_t queue_get_filtered(queue_t *q, void **e, int (*cmp)(void *, void *), void
   * q - the queue
   * v - 0 new data NOT accepted
   */
-void queue_set_new_data(queue_t *q, uint8_t v);
+int8_t queue_set_new_data(queue_t *q, uint8_t v);
 
 /**
   * returns wether the queue will accept new data
+  * also returns 0, if there was an error
   *
   * q - the queue
   *
