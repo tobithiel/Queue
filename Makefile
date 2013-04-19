@@ -1,13 +1,28 @@
 CC=gcc
-CFLAGS=-Wall -Wextra -Wno-unused-parameter -lpthread
+AR=ar
+CFLAGS=-Wall -Wextra -Wno-unused-parameter -fPIC -lpthread
 
-SOURCES=queue.c queue_internal.c
+OBJ=queue.o queue_internal.o
 
-all:
-	$(CC) $(CFLAGS) -dynamiclib -o libqueue.dylib $(SOURCES)
+UNAME=$(shell uname)
 
-examples: libqueue.dylib
-	$(CC) $(CFLAGS) -I. -L. -lqueue -o example example.c
+all: $(OBJ)
+ifeq ($(UNAME),Darwin)
+	$(CC) $(CFLAGS) -dynamiclib -o libqueue.dylib $(OBJ)
+	$(AR) rcs libqueue.a $(OBJ)
+	$(CC) $(CFLAGS) -I. -o example example.c libqueue.a
+else
+ifeq ($(UNAME),Linux)
+	$(CC) $(CFLAGS) -shared -o libqueue.so $(OBJ)
+	$(AR) rcs libqueue.a $(OBJ)
+	$(CC) $(CFLAGS) -I. -o example example.c libqueue.a
+endif
+endif
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+.PHONY: clean
 
 clean:
-	rm -f example libqueue.dylib
+	rm -f  *.o example libqueue.dylib libqueue.so libqueue.a
