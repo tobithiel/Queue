@@ -4,14 +4,23 @@ Queue
 - sort elements into queue
 - get in O(1), except when filtered (worst case O(n))
 - put in O(1) when unsorted, in O(n) in the worst case when sorted
-- MIT license
+- MIT license (windows support relies on LGPL licensed pthreads-win32 (http://sourceware.org/pthreads-win32/))
 
 sorted queue:
   your elements in the queue will be ordered according to the sort function which is given.
 
+Build steps:
+- mkdir build && cd build
+- cmake ..
+- make / build VS project under windows
+
+Building 32-/64-bit:
+- OS X: universal binaries are built
+- Linux: use 'cmake -DBUILT_32=ON ..' to force 32-bit built, -DBUILT_64=ON for 64-bit
+- Windows: use 'cmake -G "Visual Studio 11 Win64" -DBUILT_64=ON ..' to force a 64-bit build, 'cmake -G "Visual Studio 11" -DBUILT_32=ON ..' for 32-bit
+
 TODO:
 - proper test suite, so that everybody can easily see whats tested and run the tests himself
-- Windows support
 - dynamically create type-safe put/get methods with macros
 - ability to turn of element counting => only unlimited queue
 - function to peek at next element
