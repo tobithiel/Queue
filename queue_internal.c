@@ -39,7 +39,7 @@ int8_t queue_destroy_internal(queue_t *q, uint8_t fd, void (*ff)(void *)) {
 	pthread_cond_destroy(q->cond_put);
 	free(q->cond_put);
 	while(EBUSY == pthread_mutex_destroy(q->mutex))
-		usleep(100 * 1000);
+		sleepmilli(100);
 	free(q->mutex);
 	
 	// destroy queue
@@ -102,7 +102,7 @@ int8_t queue_put_internal(queue_t *q , void *el, int (*action)(pthread_cond_t *,
 		}
 	}
 	
-	queue_element_t *new_el = malloc(sizeof(queue_element_t));
+	queue_element_t *new_el = (queue_element_t *)malloc(sizeof(queue_element_t));
 	if(new_el == NULL) { // could not allocate memory for new elements
 		pthread_mutex_unlock(q->mutex);
 		return Q_ERR_MEM;

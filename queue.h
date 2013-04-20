@@ -25,10 +25,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h> /* (u)intX_t */
+#ifndef _WIN32
 #include <unistd.h> /* usleep */
+#else
+#include <windows.h> /* Sleep */
+#endif
 #include <errno.h> /* EBUSY */
 
 #include <pthread.h> /* pthread_mutex_t, pthread_cond_t */
+
+#ifdef _WIN32
+#define sleepmilli(x) Sleep(x)
+#else
+#define sleepmilli(x) usleep(x * 1000)
+#endif
 
 /**
   * type which is used for counting the number of elements.

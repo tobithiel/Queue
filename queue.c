@@ -23,16 +23,16 @@
 #include "queue_internal.h"
 
 queue_t *queue_create(void) {
-	queue_t *q = malloc(sizeof(queue_t));
+	queue_t *q = (queue_t *)malloc(sizeof(queue_t));
 	if(q != NULL) {
-		q->mutex = malloc(sizeof(pthread_mutex_t));
+		q->mutex = (pthread_mutex_t *)malloc(sizeof(pthread_mutex_t));
 		if(q->mutex == NULL) {
 			free(q);
 			return NULL;
 		}
 		pthread_mutex_init(q->mutex, NULL);
 		
-		q->cond_get = malloc(sizeof(pthread_cond_t));
+		q->cond_get = (pthread_cond_t *)malloc(sizeof(pthread_cond_t));
 		if(q->cond_get == NULL) {
 			pthread_mutex_destroy(q->mutex);
 			free(q->mutex);
@@ -41,7 +41,7 @@ queue_t *queue_create(void) {
 		}
 		pthread_cond_init(q->cond_get, NULL);
 
-		q->cond_put = malloc(sizeof(pthread_cond_t));
+		q->cond_put = (pthread_cond_t *)malloc(sizeof(pthread_cond_t));
 		if(q->cond_put == NULL) {
 			pthread_cond_destroy(q->cond_get);
 			free(q->cond_get);

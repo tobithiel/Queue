@@ -25,18 +25,18 @@ int cmp_int_ptr(int *a, int *b) {
 void unsorted_mode() {
 	queue_t *q = queue_create();
 	
-	char *t1 = malloc(1);
-	char *t2 = malloc(2);
-	char *t3 = malloc(4);
-	char *t4 = malloc(8);
+	char *t1 = (char *)malloc(1);
+	char *t2 = (char *)malloc(2);
+	char *t3 = (char *)malloc(4);
+	char *t4 = (char *)malloc(8);
 	
-	test *s1 = malloc(sizeof(test));
+	test *s1 = (test *)malloc(sizeof(test));
 	s1->test = t1; 
-	test *s2 = malloc(sizeof(test));
+	test *s2 = (test *)malloc(sizeof(test));
 	s2->test = t2; 
-	test *s3 = malloc(sizeof(test));
+	test *s3 = (test *)malloc(sizeof(test));
 	s3->test = t3; 
-	test *s4 = malloc(sizeof(test));
+	test *s4 = (test *)malloc(sizeof(test));
 	s4->test = t4; 
 	
 	queue_put(q, s1);
@@ -50,16 +50,16 @@ void unsorted_mode() {
 	queue_get(q, (void **)&t);
 	free_test(t);
 	
-	queue_destroy_complete(q, (void *)free_test);
+	queue_destroy_complete(q, (void (*)(void *))free_test);
 }
 
 void sorted_mode() {
-	queue_t *q = queue_create_sorted(1, (void *)cmp_int_ptr);
+	queue_t *q = queue_create_sorted(1, (int (*)(void *, void *))cmp_int_ptr);
 	
-	int *t1 = malloc(sizeof(int));
-	int *t2 = malloc(sizeof(int));
-	int *t3 = malloc(sizeof(int));
-	int *t4 = malloc(sizeof(int));
+	int *t1 = (int *)malloc(sizeof(int));
+	int *t2 = (int *)malloc(sizeof(int));
+	int *t3 = (int *)malloc(sizeof(int));
+	int *t4 = (int *)malloc(sizeof(int));
 	
 	*t1 = 10;
 	*t2 = 12;
@@ -89,7 +89,7 @@ void sorted_mode() {
 }
 
 void sorted2_mode() {
-	queue_t *q = queue_create_limited_sorted(3, 1, (void *)cmp_int_ptr);
+	queue_t *q = queue_create_limited_sorted(3, 1, (int (*)(void *, void *))cmp_int_ptr);
 	
 	int t1 = 1;
   queue_put(q, &t1);
