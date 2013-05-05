@@ -176,7 +176,6 @@ int8_t queue_get_internal(queue_t *q, void **e, int (*action)(pthread_cond_t *, 
 		} else {
 			while(q->num_els == 0)
 				action(q->cond_get, q->mutex);
-			}
 		}
 	}
 	
