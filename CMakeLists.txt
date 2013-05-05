@@ -8,14 +8,16 @@ set(DEPS_DIR "${PROJECT_BINARY_DIR}/deps/")
 
 include_directories("${PROJECT_SOURCE_DIR}")
 
+set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wno-unused-parameter")
+
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin" AND NOT CMAKE_OSX_ARCHITECTURES)
 	set (CMAKE_OSX_ARCHITECTURES "i386;x86_64")
 endif ()
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux" AND BUILD_32)
-	set (CMAKE_C_FLAGS -m32)
+	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m32")
 endif ()
 if (${CMAKE_SYSTEM_NAME} MATCHES "Linux" AND BUILD_64)
-	set (CMAKE_C_FLAGS -m64)
+	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -m64")
 endif ()
 if (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 	file(DOWNLOAD "ftp://sourceware.org/pub/pthreads-win32/dll-latest/include/pthread.h" "${DEPS_DIR}/pthreads-w32/include/pthread.h")

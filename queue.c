@@ -103,59 +103,78 @@ queue_t *queue_create_limited_sorted(uintX_t max_elements, int8_t asc, int (*cmp
 }
 
 int8_t queue_destroy(queue_t *q) {
+	if(q == NULL)
+		return Q_ERR_INVALID;
 	return queue_destroy_internal(q, 0, NULL);
 }
 
 int8_t queue_destroy_complete(queue_t *q, void (*ff)(void *)) {
+	if(q == NULL)
+		return Q_ERR_INVALID;
 	return queue_destroy_internal(q, 1, ff);
 }
 
 int8_t queue_flush(queue_t *q) {
-	return queue_flush_internal(q, 0, NULL);
+	if(q == NULL)
+		return Q_ERR_INVALID;
+	if (0 != queue_lock_internal(q))
+		return Q_ERR_LOCK;
+
+	int8_t r = queue_flush_internal(q, 0, NULL);
+
+	if (0 != queue_unlock_internal(q))
+		return Q_ERR_LOCK;
+	return r;
 }
 
 int8_t queue_flush_complete(queue_t *q, void (*ff)(void *)) {
-	return queue_flush_internal(q, 1, ff);
+	if(q == NULL)
+		return Q_ERR_INVALID;
+	if (0 != queue_lock_internal(q))
+		return Q_ERR_LOCK;
+
+	int8_t r = queue_flush_internal(q, 1, ff);
+
+	if (0 != queue_unlock_internal(q))
+		return Q_ERR_LOCK;
+	return r;
 }
 
 uintX_t queue_elements(queue_t *q) {
 	uintX_t ret = UINTX_MAX;
-	
-	if(q == NULL) // queue not valid
+	if(q == NULL)
 		return ret;
-	
-	if(0 != pthread_mutex_lock(q->mutex))
+	if (0 != queue_lock_internal(q))
 		return ret;
 
 	ret = q->num_els;
-	pthread_mutex_unlock(q->mutex);
-	
+
+	if (0 != queue_unlock_internal(q))
+		return Q_ERR_LOCK;
 	return ret;
 }
 
 int8_t queue_empty(queue_t *q) {
-	if(q == NULL) // queue not valid
+	if(q == NULL)
 		return Q_ERR_INVALID;
-	
-	uint8_t ret;
-	if(0 != pthread_mutex_lock(q->mutex))
+	if (0 != queue_lock_internal(q))
 		return Q_ERR_LOCK;
-	
+
+	uint8_t ret;
 	if(q->first_el == NULL || q->last_el == NULL)
 		ret = 1;
 	else
 		ret = 0;
 	
-	pthread_mutex_unlock(q->mutex);
-	
+	if (0 != queue_unlock_internal(q))
+		return Q_ERR_LOCK;
 	return ret;
 }
 
 int8_t queue_set_new_data(queue_t *q, uint8_t v) {
-	if(q == NULL) // queue not valid
+	if(q == NULL)
 		return Q_ERR_INVALID;
-	
-	if(0 != pthread_mutex_lock(q->mutex))
+	if (0 != queue_lock_internal(q))
 		return Q_ERR_LOCK;
 
 	q->new_data = v;
@@ -165,35 +184,116 @@ int8_t queue_set_new_data(queue_t *q, uint8_t v) {
 		pthread_cond_broadcast(q->cond_put);
 	}
 
-	pthread_mutex_unlock(q->mutex);
+	if (0 != queue_unlock_internal(q))
+		return Q_ERR_LOCK;
 	return Q_OK;
 }
 
 uint8_t queue_get_new_data(queue_t *q) {
-	uint8_t r = 0;
-	if(0 != pthread_mutex_lock(q->mutex))
-		return r;
-	r = q->new_data;
-	pthread_mutex_unlock(q->mutex);
+	if(q == NULL)
+		return 0;
+	if (0 != queue_lock_internal(q))
+		return 0;
+
+	uint8_t r = q->new_data;
+
+	if (0 != queue_unlock_internal(q))
+		return 0;
 	return r;
 }
 
 int8_t queue_put(queue_t *q, void *el) {
-	return queue_put_internal(q, el, NULL);
+	if(q == NULL)
+		return Q_ERR_INVALID;
+	if (0 != queue_lock_internal(q))
+		return Q_ERR_LOCK;
+	
+	int8_t r = queue_put_internal(q, el, NULL);
+
+	if (0 != queue_unlock_internal(q))
+		return Q_ERR_LOCK;
+	return r;
 }
 
 int8_t queue_put_wait(queue_t *q, void *el) {
-	return queue_put_internal(q, el, pthread_cond_wait);
+	if(q == NULL)
+		return Q_ERR_INVALID;
+	if (0 != queue_lock_internal(q))
+		return Q_ERR_LOCK;
+	
+	int8_t r = queue_put_internal(q, el, pthread_cond_wait);
+
+	if (0 != queue_unlock_internal(q))
+		return Q_ERR_LOCK;
+	return r;
 }
 
 int8_t queue_get(queue_t *q, void **e) {
-	return queue_get_internal(q, e, NULL, NULL, NULL);
+	*e = NULL;
+	if(q == NULL)
+		return Q_ERR_INVALID;
+	if (0 != queue_lock_internal(q))
+		return Q_ERR_LOCK;
+	
+	int8_t r = queue_get_internal(q, e, NULL, NULL, NULL);
+
+	if (0 != queue_unlock_internal(q))
+		return Q_ERR_LOCK;
+	return r;
 }
 
 int8_t queue_get_wait(queue_t *q, void **e) {
-	return queue_get_internal(q, e, pthread_cond_wait, NULL, NULL);
+	*e = NULL;
+	if(q == NULL)
+		return Q_ERR_INVALID;
+	if (0 != queue_lock_internal(q))
+		return Q_ERR_LOCK;
+	
+	int8_t r = queue_get_internal(q, e, pthread_cond_wait, NULL, NULL);
+
+	if (0 != queue_unlock_internal(q))
+		return Q_ERR_LOCK;
+	return r;
 }
 
 int8_t queue_get_filtered(queue_t *q, void **e, int (*cmp)(void *, void *), void *cmpel) {
-	return queue_get_internal(q, e, NULL, cmp, cmpel);
+	*e = NULL;
+	if(q == NULL)
+		return Q_ERR_INVALID;
+	if (0 != queue_lock_internal(q))
+		return Q_ERR_LOCK;
+	
+	int8_t r = queue_get_internal(q, e, NULL, cmp, cmpel);
+
+	if (0 != queue_unlock_internal(q))
+		return Q_ERR_LOCK;
+	return r;
+}
+
+int8_t queue_flush_put(queue_t *q, void (*ff)(void *), void *e) {
+	if(q == NULL)
+		return Q_ERR_INVALID;
+	if (0 != queue_lock_internal(q))
+		return Q_ERR_LOCK;
+	
+	int8_t r = queue_flush_internal(q, 0, NULL);
+	r = queue_put_internal(q, e, NULL);
+
+	if (0 != queue_unlock_internal(q))
+		return Q_ERR_LOCK;
+	return r;
+}
+
+int8_t queue_flush_complete_put(queue_t *q, void (*ff)(void *), void *e) {
+	if(q == NULL)
+		return Q_ERR_INVALID;
+	if (0 != queue_lock_internal(q))
+		return Q_ERR_LOCK;
+	
+	int8_t r = queue_flush_internal(q, 1, ff);
+	r = queue_put_internal(q, e, NULL);
+
+	if (0 != queue_unlock_internal(q))
+		return Q_ERR_LOCK;
+	return r;
 }

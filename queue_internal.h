@@ -25,11 +25,30 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "queue.h"
+#include <queue.h>
 
 /**
-  * adds an element to the queue
-  * when action is NULL the function returns with an error code
+ * ATTENTION:
+ * these functions are internal and should not be used directly.
+ * they may _not_ lock properly, expecting the caller to do so
+ */
+
+/**
+ * locks the queue
+ * returns 0 on success, else not usable
+ */
+int8_t queue_lock_internal(queue_t *q);
+
+/**
+ * unlocks the queue
+ * returns 0 on success, else not usable
+ */
+int8_t queue_unlock_internal(queue_t *q);
+
+/**
+  * adds an element to the queue.
+  * when action is NULL the function returns with an error code.
+  * queue _has_ to be locked.
   *
   * q - the queue
   * el - the element
@@ -37,11 +56,12 @@
   *
   * returns < 0 => error, 0 okay
   */
-int8_t queue_put_internal(queue_t *q , void *el, int (*action)(pthread_cond_t *, pthread_mutex_t *));
+int8_t queue_put_internal(queue_t *q, void *el, int (*action)(pthread_cond_t *, pthread_mutex_t *));
 
 /**
-  * gets the first element in the queue
-  * when action is NULL the function returns with an error code
+  * gets the first element in the queue.
+  * when action is NULL the function returns with an error code.
+  * queue _has_ to be locked.
   *
   * q - the queue
   * e - element pointer
@@ -54,7 +74,8 @@ int8_t queue_put_internal(queue_t *q , void *el, int (*action)(pthread_cond_t *,
 int8_t queue_get_internal(queue_t *q, void **e, int (*action)(pthread_cond_t *, pthread_mutex_t *), int (*cmp)(void *, void *), void *cmpel);
 
 /**
-  * destroys a queue
+  * destroys a queue.
+  * queue will be locked.
   *
   * q - the queue
   * fd - should element data be freed? 0 => No, Otherwise => Yes
@@ -63,8 +84,9 @@ int8_t queue_get_internal(queue_t *q, void **e, int (*action)(pthread_cond_t *, 
 int8_t queue_destroy_internal(queue_t *q, uint8_t fd, void (*ff)(void *));
 
 /**
-  * flushes a queue
-  * deletes all elements in the queue
+  * flushes a queue.
+  * deletes all elements in the queue.
+  * queue _has_ to be locked.
   *
   * q - the queue
   * fd - should element data be freed? 0 => No, Otherwise => Yes

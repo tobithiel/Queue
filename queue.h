@@ -59,6 +59,7 @@
 #define DEFINE_Q_GET_WAIT(fname, type) int8_t fname(queue_t *q, type **e) { return queue_get_wait(q, (void *)e); }
 #define DEFINE_Q_PUT(fname, type) int8_t fname(queue_t *q, type *e) { return queue_put(q, (void *)e); }
 #define DEFINE_Q_PUT_WAIT(fname, type) int8_t fname(queue_t *q, type *e) { return queue_put_wait(q, (void *)e); }
+#define DEFINE_Q_FLUSH_PUT(fname, type) int8_t fname(queue_t *q, void (*ff)(type *), type *e) { return queue_flush_complete_put(q, (void (*)(void *))ff, (void *)e); }
 
 /**
   * returned error codes, everything except Q_OK should be < 0
@@ -163,6 +164,24 @@ int8_t queue_flush(queue_t *q);
 int8_t queue_flush_complete(queue_t *q, void (*ff)(void *));
 
 /**
+  * just like queue_flush, followed by an queue_put atomically
+  *
+  * q - the queue
+  * ff - the free function to be used for the elements (free() if NULL)
+  * e - the element
+  */
+int8_t queue_flush_put(queue_t *q, void (*ff)(void *), void *e);
+
+/**
+  * just like queue_flush_complete, followed by an queue_put atomically
+  *
+  * q - the queue
+  * ff - the free function to be used for the elements (free() if NULL)
+  * e - the element
+  */
+int8_t queue_flush_complete_put(queue_t *q, void (*ff)(void *), void *e);
+
+/**
   * returns the number of elements in the queue
   *
   * q - the queue
@@ -186,6 +205,7 @@ int8_t queue_empty(queue_t *q);
   * will produce an error if you called queue_no_new_data()
   *
   * q - the queue
+  * e - the element
   *
   * returns 0 if everything worked, > 0 if max_elements is reached, < 0 if error occured
   */

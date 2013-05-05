@@ -22,37 +22,54 @@
 #include "queue.h"
 #include "queue_internal.h"
 
+int8_t queue_lock_internal(queue_t *q) {
+	if (q == NULL)
+		return Q_ERR_INVALID;
+	// all errors are unrecoverable for us
+	if(0 != pthread_mutex_lock(q->mutex))
+		return Q_ERR_LOCK;
+	return Q_OK;
+}
+
+int8_t queue_unlock_internal(queue_t *q) {
+	if (q == NULL)
+		return Q_ERR_INVALID;
+	// all errors are unrecoverable for us
+	if(0 != pthread_mutex_unlock(q->mutex))
+		return Q_ERR_LOCK;
+	return Q_OK;
+}
+
 int8_t queue_destroy_internal(queue_t *q, uint8_t fd, void (*ff)(void *)) {
+	// this method will not immediately return on error,
+	// it will try to release all the memory that was allocated.
+	int error = Q_OK;
 	// make sure no new data comes and wake all waiting threads
-	int8_t r = queue_set_new_data(q, 0);
-	if (r != Q_OK)
-		return r;
+	error = queue_set_new_data(q, 0);
+	error = queue_lock_internal(q);
 	
 	// release internal element memory
-	r = queue_flush_internal(q, fd, ff);
-	if (r != Q_OK)
-		return r;
+	error = queue_flush_internal(q, fd, ff);
 	
 	// destroy lock and queue etc
-	pthread_cond_destroy(q->cond_get);
+	error = pthread_cond_destroy(q->cond_get);
 	free(q->cond_get);
-	pthread_cond_destroy(q->cond_put);
+	error = pthread_cond_destroy(q->cond_put);
 	free(q->cond_put);
-	while(EBUSY == pthread_mutex_destroy(q->mutex))
+	
+	error = queue_unlock_internal(q);
+	while(EBUSY == (error = pthread_mutex_destroy(q->mutex)))
 		sleepmilli(100);
 	free(q->mutex);
 	
 	// destroy queue
 	free(q);
-	return Q_OK;
+	return error;
 }
 
 int8_t queue_flush_internal(queue_t *q, uint8_t fd, void (*ff)(void *)) {
-	if(q == NULL) // queue not valid
+	if(q == NULL)
 		return Q_ERR_INVALID;
-	
-	if(0 != pthread_mutex_lock(q->mutex))
-		return Q_ERR_LOCK;
 	
 	queue_element_t *qe = q->first_el;
 	queue_element_t *nqe = NULL;
@@ -70,33 +87,26 @@ int8_t queue_flush_internal(queue_t *q, uint8_t fd, void (*ff)(void *)) {
 	q->last_el = NULL;
 	q->num_els = 0;
 	
-	pthread_mutex_unlock(q->mutex);
 	return Q_OK;
 }
 
 int8_t queue_put_internal(queue_t *q , void *el, int (*action)(pthread_cond_t *, pthread_mutex_t *)) {
 	if(q == NULL) // queue not valid
 		return Q_ERR_INVALID;
-	
-	// we are locking this early, so that the number of elements doesn't change during allocating etc
-	if(0 != pthread_mutex_lock(q->mutex)) // could not get lock?
-		return Q_ERR_LOCK;
 		
 	if(q->new_data == 0) { // no new data allowed
-		pthread_mutex_unlock(q->mutex);
 		return Q_ERR_NONEWDATA;
 	}
 	
 	// max_elements already reached?
+	// if condition _needs_ to be in sync with while loop below!
 	if(q->num_els == (UINTX_MAX - 1) || (q->max_els != 0 && q->num_els == q->max_els)) {
 		if(action == NULL) {
-			pthread_mutex_unlock(q->mutex);
 			return Q_ERR_NUM_ELEMENTS;
 		} else {
-			action(q->cond_put, q->mutex);
-			// TODO really wait
+			while (q->num_els == (UINTX_MAX - 1) || (q->max_els != 0 && q->num_els == q->max_els))
+				action(q->cond_put, q->mutex);
 			if(q->new_data == 0) {
-				pthread_mutex_unlock(q->mutex);
 				return Q_ERR_NONEWDATA;
 			}
 		}
@@ -104,7 +114,6 @@ int8_t queue_put_internal(queue_t *q , void *el, int (*action)(pthread_cond_t *,
 	
 	queue_element_t *new_el = (queue_element_t *)malloc(sizeof(queue_element_t));
 	if(new_el == NULL) { // could not allocate memory for new elements
-		pthread_mutex_unlock(q->mutex);
 		return Q_ERR_MEM;
 	}
 	new_el->data = el;
@@ -150,7 +159,6 @@ int8_t queue_put_internal(queue_t *q , void *el, int (*action)(pthread_cond_t *,
 	// notify only one waiting thread, so that we don't have to check and fall to sleep because we were to slow
 	pthread_cond_signal(q->cond_get);
 	
-	pthread_mutex_unlock(q->mutex);
 	return Q_OK;
 }
 
@@ -160,25 +168,14 @@ int8_t queue_get_internal(queue_t *q, void **e, int (*action)(pthread_cond_t *, 
 		return Q_ERR_INVALID;
 	}
 	
-	// we are locking this early, so that the number of elements doesn't change during allocating etc
-	if(0 != pthread_mutex_lock(q->mutex)) { // could not get lock?
-		*e = NULL;
-		return Q_ERR_LOCK;
-	}
-	
 	// are elements in the queue?
 	if(q->num_els == 0) {
 		if(action == NULL) {
-			pthread_mutex_unlock(q->mutex);
 			*e = NULL;
 			return Q_ERR_NUM_ELEMENTS;
 		} else {
-			action(q->cond_get, q->mutex);
-			// TODO really wait
-			if(q->num_els == 0) {
-				pthread_mutex_unlock(q->mutex);
-				*e = NULL;
-				return Q_ERR_NUM_ELEMENTS;
+			while(q->num_els == 0)
+				action(q->cond_get, q->mutex);
 			}
 		}
 	}
@@ -206,14 +203,12 @@ int8_t queue_get_internal(queue_t *q, void **e, int (*action)(pthread_cond_t *, 
 		free(el);
 	} else {
 		// element is invalid
-		pthread_mutex_unlock(q->mutex);
 		*e = NULL;
 		return Q_ERR_INVALID_ELEMENT;
 	}
 	
 	// notify only one waiting thread
 	pthread_cond_signal(q->cond_put);
-	
-	pthread_mutex_unlock(q->mutex);
+
 	return Q_OK;
 }
