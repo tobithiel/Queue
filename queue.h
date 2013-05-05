@@ -50,6 +50,17 @@
 #endif
 
 /**
+ * simple macros to reduce necessary casting to void *
+ * or function pointers
+ */
+#define DEFINE_Q_DESTROY(fname, type) int8_t fname(queue_t *q, void (*ff)(type *)) { return queue_destroy_complete(q, (void (*)(void *))ff); }
+#define DEFINE_Q_FLUSH(fname, type) int8_t fname(queue_t *q, void (*ff)(type *)) { return queue_flush_complete(q, (void (*)(void *))ff); }
+#define DEFINE_Q_GET(fname, type) int8_t fname(queue_t *q, type **e) { return queue_get(q, (void *)e); }
+#define DEFINE_Q_GET_WAIT(fname, type) int8_t fname(queue_t *q, type **e) { return queue_get_wait(q, (void *)e); }
+#define DEFINE_Q_PUT(fname, type) int8_t fname(queue_t *q, type *e) { return queue_put(q, (void *)e); }
+#define DEFINE_Q_PUT_WAIT(fname, type) int8_t fname(queue_t *q, type *e) { return queue_put_wait(q, (void *)e); }
+
+/**
   * returned error codes, everything except Q_OK should be < 0
   */
 typedef enum queue_erros_e {

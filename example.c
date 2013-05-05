@@ -7,6 +7,9 @@ typedef struct {
 	char *test;
 } test;
 
+DEFINE_Q_GET(queue_get_test, test)
+DEFINE_Q_DESTROY(queue_destroy_complete_test, test)
+
 void free_test(test *t) {
 	if(t->test != NULL)
 		free(t->test);
@@ -45,12 +48,12 @@ void unsorted_mode() {
 	queue_put(q, s4);
 	
 	test *t;
-	queue_get(q, (void **)&t);
+	queue_get_test(q, &t);
 	free_test(t);
-	queue_get(q, (void **)&t);
+	queue_get_test(q, &t);
 	free_test(t);
 	
-	queue_destroy_complete(q, (void (*)(void *))free_test);
+	queue_destroy_complete_test(q, free_test);
 }
 
 void sorted_mode() {
