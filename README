@@ -21,7 +21,6 @@ Building 32-/64-bit:
 
 TODO:
 - proper test suite, so that everybody can easily see whats tested and run the tests himself
-- dynamically create type-safe put/get methods with macros
 - ability to turn of element counting => only unlimited queue
 - function to peek at next element
 
