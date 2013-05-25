@@ -176,16 +176,16 @@ int8_t queue_set_new_data(queue_t *q, uint8_t v) {
 		return Q_ERR_INVALID;
 	if (0 != queue_lock_internal(q))
 		return Q_ERR_LOCK;
-
 	q->new_data = v;
+	if (0 != queue_unlock_internal(q))
+		return Q_ERR_LOCK;
+
 	if(q->new_data == 0) {
 		// notify waiting threads, when new data isn't accepted
 		pthread_cond_broadcast(q->cond_get);
 		pthread_cond_broadcast(q->cond_put);
 	}
 
-	if (0 != queue_unlock_internal(q))
-		return Q_ERR_LOCK;
 	return Q_OK;
 }
 
