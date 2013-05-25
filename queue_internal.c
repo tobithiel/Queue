@@ -104,7 +104,7 @@ int8_t queue_put_internal(queue_t *q , void *el, int (*action)(pthread_cond_t *,
 		if(action == NULL) {
 			return Q_ERR_NUM_ELEMENTS;
 		} else {
-			while (q->num_els == (UINTX_MAX - 1) || (q->max_els != 0 && q->num_els == q->max_els))
+			while ((q->num_els == (UINTX_MAX - 1) || (q->max_els != 0 && q->num_els == q->max_els)) && q->new_data != 0)
 				action(q->cond_put, q->mutex);
 			if(q->new_data == 0) {
 				return Q_ERR_NONEWDATA;
@@ -174,8 +174,10 @@ int8_t queue_get_internal(queue_t *q, void **e, int (*action)(pthread_cond_t *, 
 			*e = NULL;
 			return Q_ERR_NUM_ELEMENTS;
 		} else {
-			while(q->num_els == 0)
+			while(q->num_els == 0 && q->new_data != 0)
 				action(q->cond_get, q->mutex);
+			if (q->num_els == 0 && q->new_data == 0)
+				return Q_ERR_NONEWDATA;
 		}
 	}
 	
